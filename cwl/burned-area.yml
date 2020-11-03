@@ -1,5 +1,5 @@
 pre_event: https://catalog.terradue.com/sentinel2/search?uid=S2B_MSIL2A_20200130T004659_N0213_R102_T53HPA_20200130T022348
 post_event: https://catalog.terradue.com/sentinel2/search?uid=S2B_MSIL2A_20201006T004709_N0214_R102_T53HPA_20201006T022805
-aoi: 'POLYGON((30.358 29.243,30.358 29.545,30.8 29.545,30.8 29.243,30.358 29.243))'
+aoi: 'POLYGON((136.508 -36.108,136.508 -35.654,137.178 -35.654,137.178 -36.108,136.508 -36.108))'
 ndvi_threshold: '0.18'
 ndwi_threshold: '0.19'

@@ -7,7 +7,8 @@ $graph:
       dockerPull: eoepca/stage-in:0.2
   id: stagein
   arguments:
-      - -t ./
+      - prefix: -t
+        valueFrom: ./
   inputs:
     inp1:
       inputBinding:
@@ -66,13 +67,13 @@ $graph:
       inputBinding:
         position: 1
         prefix: --pre_event
-        valueFrom: inputs.inp1.$0
+        valueFrom: $(inputs.inp1[0])
       type: Directory[]
     inp2:
       inputBinding:
         position: 2
         prefix: --post_event
-        valueFrom: inputs.inp1.$1
+        valueFrom: $(inputs.inp2[1])
       type: Directory[]
     inp3:
       inputBinding:
@@ -90,6 +91,7 @@ $graph:
         glob: .
       type: Directory
   requirements:
+    InlineJavascriptRequirement: {}
     EnvVarRequirement:
       envDef:
         PATH: /opt/anaconda/envs/env_burned_area_delineation/bin:/opt/anaconda/envs/env_burned_area_delineation/bin:/opt/anaconda/envs/env_default/bin:/opt/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
