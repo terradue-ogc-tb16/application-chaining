@@ -40,6 +40,10 @@ Its docker git repository is available at https://github.com/terradue-ogc-tb16/d
 
 This step takes as input a local STAC catalog with STAC catalog with a single item whose assets point to the 'NDVI', 'NDWI' and 'NBR' assets to produce a bitmask for the burned area based on the NDVI and NDWI thresholds and the Relativized Burn Ratio, an indicator of the burned area intensity .
 
+This step produces as output:
+
+- a local STAC catalog with a single item whose assets point to the NDVI/NDWI threshold and normalized burn ratio assets
+
 The Jupyter Notebook git repository is available at https://github.com/terradue-ogc-tb16/burned-area-delineation
 
 Its docker git repository is available at https://github.com/terradue-ogc-tb16/docker-burned-area-delineation
