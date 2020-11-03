@@ -1,0 +1,10 @@
+aoi: POLYGON((136.508 -36.108,136.508 -35.654,137.178 -35.654,137.178 -36.108,136.508
+  -36.108))
+ndvi_threshold: '0.19'
+ndwi_threshold: '0.18'
+post_event:
+  class: Directory
+  path: file:///workspace/ogc-tb16/application-chaining/notebook/2anetr3f
+pre_event:
+  class: Directory
+  path: file:///workspace/ogc-tb16/application-chaining/notebook/dkb877e9

@@ -1,0 +1,3 @@
+input_reference:
+- https://catalog.terradue.com/sentinel2/search?uid=S2B_MSIL2A_20200130T004659_N0213_R102_T53HPA_20200130T022348
+target_folder: ./
