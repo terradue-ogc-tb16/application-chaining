@@ -129,14 +129,14 @@ $graph:
   outputs:
   - id: wf_outputs
     outputSource:
-    - node_3/results
+    - delineation/results
     type: Directory
   requirements:
   - class: ScatterFeatureRequirement
   - class: MultipleInputFeatureRequirement
   steps:
   
-    node_1:
+    stage-in:
       in:
         inp1: [pre_event, post_event]
       out:
@@ -145,9 +145,9 @@ $graph:
       scatter: inp1
       scatterMethod: dotproduct
       
-    node_2:
+    vegetation-index:
       in:
-        inp1: node_1/results
+        inp1: stage-in/results
         inp2: aoi
       out:
       - results
@@ -155,10 +155,10 @@ $graph:
       scatter: inp1
       scatterMethod: dotproduct
     
-    node_3:
+    delineation:
       in:
-        inp1: node_2/results
-        inp2: node_2/results
+        inp1: vegetation-index/results
+        inp2: vegetation-index/results
         inp3: ndvi_threshold
         inp4: ndwi_threshold
       out:
