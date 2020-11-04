@@ -1,0 +1,9 @@
+store_username: ''  
+store_host: 'https://nx10438.your-storageshare.de'
+store_apikey: ''
+pre_event:  'https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage/wf-xwz-vegetation-index/iddysyz9/catalog.json'
+post_event: 'https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage/wf-xwz-vegetation-index/j2yo5b37/catalog.json' 
+outputfile: 'ba-results.json'
+ndwi_threshold: '0.18'  # type "string"
+ndvi_threshold: '0.19'  # type "string"
+job: 'wfz-burned-area'  # type "string"
