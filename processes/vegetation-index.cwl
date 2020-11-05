@@ -32,7 +32,7 @@ $graph:
 - class: Workflow
   label: Vegetation index
   doc: Vegetation index
-  id: nb-vegetation-index
+  id: vegetation-index
   inputs:
     input_reference:
       doc: Sentinel-2 Level-2 acquisition catalog reference
