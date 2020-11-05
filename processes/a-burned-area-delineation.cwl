@@ -1,7 +1,7 @@
 $graph:
 - class: Workflow
   doc: Main stage manager
-  id: stage-manager
+  id: main
   inputs:
     job:
       doc: ''
@@ -61,6 +61,8 @@ $graph:
     node_stage_in:
       in:
         pre_event: pre_event
+        store_username: store_username
+        store_apikey: store_apikey
       out:
       - pre_event_out
       run:
@@ -72,12 +74,22 @@ $graph:
         class: CommandLineTool
         hints:
           DockerRequirement:
-            dockerPull: eoepca/stage-in:0.2
+            dockerPull: eoepca/stage-in:0.6
         id: stagein
         inputs:
-          pre_event:
+          store_username:
             inputBinding:
               position: 2
+              prefix: -u
+            type: string
+          store_apikey:
+            inputBinding:
+              position: 3
+              prefix: -p
+            type: string
+          pre_event:
+            inputBinding:
+              position: 4
             type: string
         outputs:
           pre_event_out:
@@ -92,6 +104,8 @@ $graph:
     node_stage_in_1:
       in:
         post_event: post_event
+        store_username: store_username
+        store_apikey: store_apikey
       out:
       - post_event_out
       run:
@@ -103,12 +117,22 @@ $graph:
         class: CommandLineTool
         hints:
           DockerRequirement:
-            dockerPull: eoepca/stage-in:0.2
+            dockerPull: eoepca/stage-in:0.6
         id: stagein
         inputs:
-          post_event:
+          store_username:
             inputBinding:
               position: 2
+              prefix: -u
+            type: string
+          store_apikey:
+            inputBinding:
+              position: 3
+              prefix: -p
+            type: string
+          post_event:
+            inputBinding:
+              position: 4
             type: string
         outputs:
           post_event_out:
