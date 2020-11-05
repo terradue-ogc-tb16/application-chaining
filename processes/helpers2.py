@@ -11,193 +11,241 @@ namespace = 'terradue'
 
 cwltool = '/opt/anaconda/bin/cwltool'
 
-def read_cwl(cwl_file):
+class Workflow():
     
-    with open(cwl_file) as file:
-    
-        cwl = yaml.load(file,
-                    Loader=yaml.FullLoader)
-    
-    return cwl
+    def __init__(cwl_file):
 
-def get_workflow_class(cwl):
-    
-    cwl_workflow = None
-    
-    for block in cwl['$graph']:
+        with open(cwl_file) as file:
 
-        if block['class'] == 'Workflow':
+            cwl = yaml.load(file,
+                        Loader=yaml.FullLoader)
 
-            cwl_workflow = block
+        self.cwl = cwl
+        self.cwl_file = cwl_file
+        self.result = None
 
-            break
-            
-    return cwl_workflow
+    def get_workflow_class(self):
 
-def get_workflow_id(cwl_file):
-    
-    cwl = read_cwl(cwl_file)
-        
-    return get_workflow_class(cwl)['id']
+        cwl_workflow = None
 
-def get_workflow_inputs(cwl_file):
-    
-    cwl = read_cwl(cwl_file)
+        for block in self.cwl['$graph']:
 
-    wf = get_workflow_class(cwl)
-    
-    return wf['inputs']
+            if block['class'] == 'Workflow':
 
-def process_worflow(cwl_file, params):
-    
-    temp_file = os.path.join('/tmp', next(tempfile._get_candidate_names()))
-    
-    with open(temp_file, 'w') as yaml_file:
-
-        yaml.dump(params,
-                  yaml_file, 
-                  default_flow_style=False)
-    
-    # invoke cwltool
-    cmd_args = [cwltool, 
-                '--no-read-only',
-                '--no-match-user',
-                '{}#{}'.format(cwl_file, 
-                               get_workflow_id(cwl_file)), 
-                temp_file]
-        
-    print(' '.join(cmd_args))
-
-    pipes = subprocess.Popen(cmd_args, 
-                             stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE)
-    
-    std_out, std_err = pipes.communicate()
-    
-    os.remove(temp_file)
-    
-    return json.loads(std_out.decode()), std_err
-
-def get_catalog(result):
-
-    if type(result['wf_outputs']) is list and result['wf_outputs'][0] is None:
-        
-        raise ValueError('Empty results')
-    
-    stac_catalog = None
-
-    staged_stac_catalogs = []
-
-
-    if type(result['wf_outputs']) is dict:
-
-        for index, listing in enumerate(result['wf_outputs']['listing']):
-
-            if listing['class'] == 'File':
-
-                if (listing['basename']) == 'catalog.json':
-
-                    stac_catalog = listing['location']
+                cwl_workflow = block
 
                 break
 
-    elif type(result['wf_outputs']) is list:
+        return cwl_workflow
 
-        for index, listing in enumerate(result['wf_outputs']):
+    def get_workflow_id(self):
 
-            for sublisting in listing['listing']:
+        return get_workflow_class(self.cwl)['id']
 
-                if (sublisting['basename']) == 'catalog.json':
-                    stac_catalog = sublisting['location']
+    def get_workflow_inputs():
+
+        wf = get_workflow_class(self.cwl)
+
+        return wf['inputs']
+
+    def process_worflow(self, params):
+
+        temp_file = os.path.join('/tmp', next(tempfile._get_candidate_names()))
+
+        with open(temp_file, 'w') as yaml_file:
+
+            yaml.dump(params,
+                      yaml_file, 
+                      default_flow_style=False)
+
+        # invoke cwltool
+        cmd_args = [cwltool, 
+                    '--no-read-only',
+                    '--no-match-user',
+                    '{}#{}'.format(self.cwl_file , 
+                                   self.get_workflow_id()), 
+                    temp_file]
+
+        print(' '.join(cmd_args))
+
+        pipes = subprocess.Popen(cmd_args, 
+                                 stdout=subprocess.PIPE, 
+                                 stderr=subprocess.PIPE)
+
+        std_out, std_err = pipes.communicate()
+
+        os.remove(temp_file)
+
+        self.result = std_out.decode()
+        
+        return json.loads(self.result), std_err
+
+    def get_catalog(self):
+
+        if type(self.result['wf_outputs']) is list and self.result['wf_outputs'][0] is None:
+
+            raise ValueError('Empty results')
+
+        stac_catalog = None
+
+        staged_stac_catalogs = []
+
+
+        if type(self.result['wf_outputs']) is dict:
+
+            for index, listing in enumerate(self.result['wf_outputs']['listing']):
+
+                if listing['class'] == 'File':
+
+                    if (listing['basename']) == 'catalog.json':
+
+                        stac_catalog = listing['location']
 
                     break
 
-    return stac_catalog
-                             
-                             
-def get_deploy_payload(url):
-    
-    deploy_payload = {'inputs': [{'id': 'applicationPackage',
-                              'input': {'format': {'mimeType': 'application/cwl'},
-                                        'value': {'href': '{}'.format(url)}}}],
-                  'outputs': [{'format': {'mimeType': 'string',
-                                          'schema': 'string',
-                                          'encoding': 'string'},
-                               'id': 'deployResult',
-                               'transmissionMode': 'value'}],
-                  'mode': 'auto',
-                  'response': 'raw'}
-    
-    return deploy_payload
+        elif type(self.result['wf_outputs']) is list:
 
-def get_headers(token):
-    
-    headers = {'Authorization': f'Bearer {token}',
-               'Content-Type': 'application/json',
-               'Accept': 'application/json'}
+            for index, listing in enumerate(self.result['wf_outputs']):
 
-def get_deploy_headers(token):
-    
-    deploy_headers = {'Authorization': f'Bearer {token}',
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json', 
-                      'Prefer': 'respond-async'} 
-    
-    return deploy_headers
+                for sublisting in listing['listing']:
 
-def deploy_process(cwl_url, token):
-    
-    r = requests.post(f'{endpoint}/{namespace}/wps3/processes',
-                      json=get_deploy_payload(cwl_url),
-                      headers=get_deploy_headers(token))
-    
-    return r
+                    if (sublisting['basename']) == 'catalog.json':
+                        stac_catalog = sublisting['location']
 
-def get_process(token, process_id=None):
+                        break
+
+        return stac_catalog
+
+class Process:
     
-    headers = {'Authorization': f'Bearer {token}',
-               'Content-Type': 'application/json',
-               'Accept': 'application/json'}
-    
-    if process_id is None:
-    
-        return requests.get(f'{endpoint}/{namespace}/wps3/processes',
-                            headers=get_headers(token))
-    
-    else:
+    def __init__(self, token):
         
-        return requests.get(f'{endpoint}/{namespace}/wps3/processes/{process_id}',
-                            headers=get_headers(token))
-    
-    
-def execute_process(token, process_id, execute_inputs):
-    
-    execution_headers = {'Authorization': f'Bearer {token}',
-                       'Content-Type': 'application/json',
-                       'Accept': 'application/json', 
-                       'Prefer': 'respond-async'}
-    
-    execute_request = {'inputs': execute_inputs,
-                       'outputs': [{'format': {'mimeType': 'string',
-                                               'schema': 'string',
-                                               'encoding': 'string'},
-                                    'id': 'wf_output',
-                                    'transmissionMode': 'value'}],
-                       'mode': 'async',
-                       'response': 'raw'}
+        self.endpoint = 'http://ades-dev.eoepca.terradue.com' 
+        self.namespace = 'terradue'
+        
+        self.token = token
+        self.process_id = process_id
+        self.endpoint = endpoint
+        
+    def _get_deploy_payload(self, url):
 
-    return requests.post(f'{endpoint}/{namespace}/wps3/processes/{process_id}/jobs',
-                         json=execute_request,
-                         headers=execution_headers)
+        deploy_payload = {'inputs': [{'id': 'applicationPackage',
+                                  'input': {'format': {'mimeType': 'application/cwl'},
+                                            'value': {'href': '{}'.format(url)}}}],
+                      'outputs': [{'format': {'mimeType': 'string',
+                                              'schema': 'string',
+                                              'encoding': 'string'},
+                                   'id': 'deployResult',
+                                   'transmissionMode': 'value'}],
+                      'mode': 'auto',
+                      'response': 'raw'}
 
+        return deploy_payload
 
+    def _get_headers(self, token):
+
+        headers = {'Authorization': f'Bearer {self.token}',
+                   'Content-Type': 'application/json',
+                   'Accept': 'application/json'}
+
+    def get_deploy_headers(self, token):
+
+        deploy_headers = {'Authorization': f'Bearer {self.token}',
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json', 
+                          'Prefer': 'respond-async'} 
+
+        return deploy_headers
+
+    def deploy_process(self, cwl_url):
+
+        r = requests.post(f'{self.endpoint}/{self.namespace}/wps3/processes',
+                          json=self.get_deploy_payload(cwl_url),
+                          headers= self._get_deploy_headers(self.token))
+
+        return r
+
+    def get_process(self, process_id=None):
+
+        headers = {'Authorization': f'Bearer {self.token}',
+                   'Content-Type': 'application/json',
+                   'Accept': 'application/json'}
+
+        r = None
+        
+        if process_id is None:
+
+            r = requests.get(f'{self.endpoint}/{self.namespace}/wps3/processes',
+                                headers=get_headers(self.token))
+
+        else:
+
+            r = requests.get(f'{self.endpoint}/{self.namespace}/wps3/processes/{self.process_id}',
+                                headers=self._get_headers(self.token))
+        
+        return r
+
+class Execution:
     
-def get_status(token, job_location):
-
-    return requests.get(f'{endpoint}{job_location}',
-                        headers=get_headers(token))
-
-def get_result(token, job_location):
+    def __init__(token, process_id):
+        
+        self.endpoint = 'http://ades-dev.eoepca.terradue.com' 
+        self.namespace = 'terradue'
+        
+        self.token = token
+        self.process_id = process_id
+        self.endpoint = endpoint
+        self.namespace = namespace
+        self.job_location = None
+        
+    def execute_process(self, execute_inputs):
     
-    return requests.get(f'{endpoint}/{job_location}/result',
-                          headers=get_headers(token))
+        execution_headers = {'Authorization': f'Bearer {self.token}',
+                           'Content-Type': 'application/json',
+                           'Accept': 'application/json', 
+                           'Prefer': 'respond-async'}
+
+        execute_request = {'inputs': execute_inputs,
+                           'outputs': [{'format': {'mimeType': 'string',
+                                                   'schema': 'string',
+                                                   'encoding': 'string'},
+                                        'id': 'wf_output',
+                                        'transmissionMode': 'value'}],
+                           'mode': 'async',
+                           'response': 'raw'}
+
+        r = requests.post(f'{self.endpoint}/{self.namespace}/wps3/processes/{self.process_id}/jobs',
+                             json=execute_request,
+                             headers=execution_headers)
+
+        if r.status_code == 200:
+            
+            self.job_location = r.headers['Location']
+ 
+        return r
+        
+    def get_job_location(self):
+        
+        return self.job_location
+    
+    def get_status(self):
+
+        if self.job_location = None:
+            
+            return None
+        
+        r = requests.get(f'{self.endpoint}{self.job_location}',
+                         headers=get_headers(self.token))
+        
+        return r
+
+    def get_result(self):
+        
+         if self.job_location = None:
+            
+            return None
+
+        r = requests.get(f'{self.endpoint}/{self.job_location}/result',
+                         headers=get_headers(self.token))
+        
+        return r
